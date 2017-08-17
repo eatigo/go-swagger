@@ -37,9 +37,14 @@ func ({{ .ReceiverName }} *{{ pascalize .Name }}) Error() string {
 
 
 func ({{ .ReceiverName }} *{{ pascalize .Name }}) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
-  {{ range .Headers }}
+  {{ range .Headers }}   {{ $headerName := camelize .Name }}
   // response header {{.Name}}
-  {{if .Converter }}{{ camelize .Name }}, err := {{ .Converter }}(response.GetHeader("{{ .Name }}"))
+
+  {{ $headerName }}Str := response.GetHeader("{{ .Name }}")
+  if {{ $headerName }}Str == "" {
+    {{ $headerName }}Str = "{{ .ZeroValue }}"
+  }
+  {{if .Converter }}{{ camelize .Name }}, err := {{ .Converter }}({{ $headerName }}Str)
   if err != nil {
     return errors.InvalidType({{ .Path }}, "header", "{{ .GoType }}", response.GetHeader("{{ .Name }}"))
   }
